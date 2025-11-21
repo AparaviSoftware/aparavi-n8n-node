@@ -1,0 +1,73 @@
+{
+  "pipeline": {
+    "source": "source_1",
+    "components": [
+      {
+        "id": "source_1",
+        "provider": "webhook",
+        "config": {
+          "key": "webhook://*",
+          "mode": "Source",
+          "name": "Webhook Source",
+          "parameters": {
+            "endpoint": "/pipe/process",
+            "port": 5566
+          }
+        }
+      },
+      {
+        "id": "audio_transcribe_1",
+        "provider": "audio_transcribe",
+        "config": {
+          "default": {
+            "max_seconds": 500,
+            "min_seconds": 240,
+            "model": "medium",
+            "silence_threshold": 0.25,
+            "vad_level": 2
+          },
+          "profile": "default"
+        },
+        "input": [
+          {
+            "lane": "audio",
+            "from": "source_1"
+          }
+        ]
+      },
+      {
+        "id": "summary_1",
+        "provider": "summary",
+        "config": {
+          "max_length": 150,
+          "min_length": 30
+        },
+        "input": [
+          {
+            "lane": "text",
+            "from": "audio_transcribe_1"
+          }
+        ]
+      },
+      {
+        "id": "response_1",
+        "provider": "response",
+        "config": {
+          "keys": {
+            "documents": "procdocs"
+          }
+        },
+        "input": [
+          {
+            "lane": "text",
+            "from": "audio_transcribe_1"
+          },
+          {
+            "lane": "text",
+            "from": "summary_1"
+          }
+        ]
+      }
+    ]
+  }
+}

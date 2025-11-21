@@ -1,0 +1,271 @@
+{
+  "name": "Banking Customer Onboarding - PII Censoring",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample customer application data\nconst customerData = {\n  applications: [\n    {\n      customerId: \"CUST-001\",\n      fullName: \"John Smith\",\n      ssn: \"123-45-6789\",\n      driverLicense: \"D123456789\",\n      email: \"john.smith@email.com\",\n      phone: \"(555) 123-4567\",\n      address: \"123 Main St, New York, NY 10001\",\n      bankAccount: \"1234567890\",\n      creditCard: \"4532-1234-5678-9012\",\n      applicationDate: \"2024-01-15\",\n      status: \"pending_review\"\n    },\n    {\n      customerId: \"CUST-002\",\n      fullName: \"Jane Doe\",\n      ssn: \"987-65-4321\",\n      driverLicense: \"D987654321\",\n      email: \"jane.doe@email.com\",\n      phone: \"(555) 987-6543\",\n      address: \"456 Oak Ave, Los Angeles, CA 90210\",\n      bankAccount: \"0987654321\",\n      creditCard: \"5555-4444-3333-2222\",\n      applicationDate: \"2024-01-16\",\n      status: \"pending_review\"\n    }\n  ]\n};\n\n// Return each application as a separate item for processing\nreturn customerData.applications.map(app => ({\n  json: app\n}));"
+      },
+      "id": "sample-data",
+      "name": "Sample Customer Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🔒 Basic PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"name\": \"████ ████\",        // Censored data\n  \"ssn\": \"███-██-████\",       // Censored data\n  \"email\": \"████@████.███\"    // Censored data\n}\n```\n\n**Perfect for:** Simple workflows, basic PII protection, straightforward data processing\n\n**Want more?** Try the Advanced version for audit trails and metadata!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "content": "## 🎬 Video Script - Banking Customer Onboarding\n\n### **Opening (0-30s)**\n• Welcome to n8n PII Censoring workflow demo\n• Show the banking customer onboarding use case\n• Explain why PII protection is critical for financial services\n\n### **Data Setup (30s-1m)**\n• Walk through the sample customer data\n• Show SSN, driver's license, bank account numbers\n• Highlight the sensitive information that needs protection\n\n### **PII Processing (1m-2m)**\n• Demonstrate the Aparavi PII Censor node\n• Show USA PII type selection\n• Explain default settings (preserveStructure: false)\n• Run the workflow and show censored output\n\n### **Results Analysis (2m-2:30s)**\n• Compare original vs censored data\n• Show how SSN becomes ███-██-████\n• Explain the business value for compliance\n\n### **Advanced Options (2:30s-3m)**\n• Mention advanced version with preserveStructure: true\n• Show when you'd want audit trails\n• Wrap up with next steps",
+        "height": 800,
+        "width": 800
+      },
+      "id": "video-script",
+      "name": "Video Script",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, -600]
+    },
+    {
+      "parameters": {
+        "piiType": "usa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-pii",
+      "name": "Censor USA PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "options": {
+          "height": 315,
+          "width": 560
+        }
+      },
+      "id": "video-node",
+      "name": "Demo Video",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  customerId: inputData.customerId,\n  fullName: inputData.fullName,\n  ssn: inputData.ssn,\n  driverLicense: inputData.driverLicense,\n  email: inputData.email,\n  phone: inputData.phone,\n  address: inputData.address,\n  bankAccount: inputData.bankAccount,\n  creditCard: inputData.creditCard,\n  applicationDate: inputData.applicationDate,\n  status: inputData.status\n};\n\nconst censored = inputData.censored;\n\nreturn [{\n  json: {\n    summary: `Customer ${original.customerId} processed`,\n    original: {\n      name: original.fullName,\n      ssn: original.ssn,\n      email: original.email,\n      phone: original.phone\n    },\n    censored: {\n      name: censored.fullName,\n      ssn: censored.ssn,\n      email: censored.email,\n      phone: censored.phone\n    },\n    metadata: inputData._metadata,\n    status: original.status\n  }\n}];"
+      },
+      "id": "create-summary",
+      "name": "Create Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending_review",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ Customer application processed and PII censored for compliance review"
+            },
+            {
+              "name": "customerId",
+              "value": "={{ $json.original.customerId || $json.censored.customerId }}"
+            },
+            {
+              "name": "censoredData",
+              "value": "={{ JSON.stringify($json.censored, null, 2) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "compliance-ready",
+      "name": "Ready for Compliance Review",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "⚠️ Customer application needs additional processing"
+            },
+            {
+              "name": "customerId",
+              "value": "={{ $json.original.customerId || $json.censored.customerId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "needs-processing",
+      "name": "Needs Additional Processing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Customer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Customer Data": {
+      "main": [
+        [
+          {
+            "node": "Censor USA PII",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor USA PII": {
+      "main": [
+        [
+          {
+            "node": "Create Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "main": [
+        [
+          {
+            "node": "Ready for Compliance Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Needs Additional Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1",
+  "groups": [
+    {
+      "id": "data-setup-group",
+      "name": "📊 Data Setup",
+      "color": "#FF6B6B",
+      "nodes": ["Manual Trigger", "Sample Customer Data"],
+      "position": [200, 200],
+      "dimensions": [300, 200]
+    },
+    {
+      "id": "pii-processing-group",
+      "name": "🔒 PII Processing",
+      "color": "#4ECDC4",
+      "nodes": ["Censor USA PII", "Default PII Processing"],
+      "position": [800, 200],
+      "dimensions": [300, 200]
+    },
+    {
+      "id": "analysis-group",
+      "name": "📈 Analysis & Results",
+      "color": "#45B7D1",
+      "nodes": ["Create Summary", "Check Status", "Ready for Compliance Review", "Needs Additional Processing"],
+      "position": [1100, 200],
+      "dimensions": [400, 300]
+    },
+    {
+      "id": "video-group",
+      "name": "🎬 Video Resources",
+      "color": "#96CEB4",
+      "nodes": ["Video Script", "Demo Video"],
+      "position": [1200, 50],
+      "dimensions": [600, 600]
+    }
+  ]
+}

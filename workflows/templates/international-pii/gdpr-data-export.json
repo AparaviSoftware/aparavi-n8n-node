@@ -1,0 +1,219 @@
+{
+  "name": "GDPR Data Export - International PII Censoring",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample EU customer data\nconst customers = [\n  {\n    customerId: \"EU-001\",\n    fullName: \"Anna Müller\",\n    email: \"anna.mueller@email.de\",\n    phone: \"+49 30 12345678\",\n    passport: \"DE123456789\",\n    nationalId: \"12345678901\",\n    address: \"Hauptstraße 123, 10115 Berlin, Germany\",\n    dateOfBirth: \"1985-03-15\",\n    ipAddress: \"192.168.1.100\",\n    lastLogin: \"2024-01-15T14:30:00Z\",\n    dataProcessingConsent: true,\n    marketingConsent: false\n  },\n  {\n    customerId: \"EU-002\",\n    fullName: \"Pierre Dubois\",\n    email: \"pierre.dubois@email.fr\",\n    phone: \"+33 1 23 45 67 89\",\n    passport: \"FR987654321\",\n    nationalId: \"98765432109\",\n    address: \"123 Rue de la Paix, 75001 Paris, France\",\n    dateOfBirth: \"1990-07-22\",\n    ipAddress: \"192.168.1.101\",\n    lastLogin: \"2024-01-15T16:45:00Z\",\n    dataProcessingConsent: true,\n    marketingConsent: true\n  },\n  {\n    customerId: \"EU-003\",\n    fullName: \"María García\",\n    email: \"maria.garcia@email.es\",\n    phone: \"+34 91 123 45 67\",\n    passport: \"ES456789123\",\n    nationalId: \"45678912345\",\n    address: \"Calle Mayor 456, 28001 Madrid, Spain\",\n    dateOfBirth: \"1988-11-08\",\n    ipAddress: \"192.168.1.102\",\n    lastLogin: \"2024-01-15T18:20:00Z\",\n    dataProcessingConsent: true,\n    marketingConsent: false\n  }\n];\n\n// Return each customer as a separate item for processing\nreturn customers.map(customer => ({\n  json: customer\n}));"
+      },
+      "id": "sample-customers",
+      "name": "Sample EU Customer Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🌍 International PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"fullName\": \"████ ███████\",     // Censored data\n  \"email\": \"████@████.███\",       // Censored data\n  \"passport\": \"█████████\"         // Censored data\n}\n```\n\n**Perfect for:** GDPR compliance, international data processing, simple anonymization\n\n**Want audit trails?** Try the Advanced version for compliance reporting!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "piiType": "international",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-international-pii",
+      "name": "Censor International PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  customerId: inputData.customerId,\n  fullName: inputData.fullName,\n  email: inputData.email,\n  phone: inputData.phone,\n  passport: inputData.passport,\n  nationalId: inputData.nationalId,\n  address: inputData.address,\n  dateOfBirth: inputData.dateOfBirth,\n  ipAddress: inputData.ipAddress,\n  lastLogin: inputData.lastLogin,\n  dataProcessingConsent: inputData.dataProcessingConsent,\n  marketingConsent: inputData.marketingConsent\n};\n\nconst censored = inputData.censored;\n\n// Create export-ready data structure\nconst exportData = {\n  customerId: original.customerId,\n  personalData: {\n    name: censored.fullName,\n    email: censored.email,\n    phone: censored.phone,\n    address: censored.address,\n    dateOfBirth: censored.dateOfBirth\n  },\n  identifiers: {\n    passport: censored.passport,\n    nationalId: censored.nationalId\n  },\n  technicalData: {\n    ipAddress: censored.ipAddress,\n    lastLogin: censored.lastLogin\n  },\n  consent: {\n    dataProcessing: original.dataProcessingConsent,\n    marketing: original.marketingConsent\n  },\n  gdprMetadata: {\n    exportDate: new Date().toISOString(),\n    dataController: \"Your Company Name\",\n    legalBasis: \"Consent\",\n    retentionPeriod: \"7 years\",\n    piiProcessed: inputData._metadata\n  }\n};\n\nreturn [{\n  json: exportData\n}];"
+      },
+      "id": "create-gdpr-export",
+      "name": "Create GDPR Export",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.consent.dataProcessing }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-consent",
+      "name": "Check Data Processing Consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ GDPR Export Ready - Customer data processed and anonymized"
+            },
+            {
+              "name": "customerId",
+              "value": "={{ $json.customerId }}"
+            },
+            {
+              "name": "exportData",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "GDPR COMPLIANT - PII properly anonymized for export"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gdpr-compliant-export",
+      "name": "GDPR Compliant Export",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "⚠️ Consent Required - Customer has not consented to data processing"
+            },
+            {
+              "name": "customerId",
+              "value": "={{ $json.customerId }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "CONSENT REQUIRED - Cannot export without explicit consent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "consent-required",
+      "name": "Consent Required",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample EU Customer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample EU Customer Data": {
+      "main": [
+        [
+          {
+            "node": "Censor International PII",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor International PII": {
+      "main": [
+        [
+          {
+            "node": "Create GDPR Export",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GDPR Export": {
+      "main": [
+        [
+          {
+            "node": "Check Data Processing Consent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Data Processing Consent": {
+      "main": [
+        [
+          {
+            "node": "GDPR Compliant Export",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consent Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

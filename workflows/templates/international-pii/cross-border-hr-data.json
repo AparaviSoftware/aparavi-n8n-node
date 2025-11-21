@@ -1,0 +1,231 @@
+{
+  "name": "Cross-Border HR Data Processing",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample global employee data\nconst employees = [\n  {\n    employeeId: \"EMP-001\",\n    fullName: \"Yuki Tanaka\",\n    email: \"yuki.tanaka@company.com\",\n    phone: \"+81 3-1234-5678\",\n    passport: \"JP123456789\",\n    nationalId: \"1234567890123\",\n    address: \"1-2-3 Shibuya, Shibuya-ku, Tokyo 150-0002, Japan\",\n    dateOfBirth: \"1985-05-20\",\n    department: \"Engineering\",\n    position: \"Senior Developer\",\n    salary: 8500000,\n    currency: \"JPY\",\n    country: \"Japan\",\n    workPermit: \"WP-JP-2024-001\",\n    emergencyContact: {\n      name: \"Hiroshi Tanaka\",\n      phone: \"+81 90-1234-5678\",\n      relationship: \"Father\"\n    }\n  },\n  {\n    employeeId: \"EMP-002\",\n    fullName: \"Emma Thompson\",\n    email: \"emma.thompson@company.com\",\n    phone: \"+44 20 7946 0958\",\n    passport: \"GB987654321\",\n    nationalId: \"9876543210\",\n    address: \"123 Baker Street, London NW1 6XE, United Kingdom\",\n    dateOfBirth: \"1990-08-15\",\n    department: \"Marketing\",\n    position: \"Marketing Manager\",\n    salary: 55000,\n    currency: \"GBP\",\n    country: \"United Kingdom\",\n    workPermit: \"WP-UK-2024-002\",\n    emergencyContact: {\n      name: \"James Thompson\",\n      phone: \"+44 7700 900123\",\n      relationship: \"Husband\"\n    }\n  },\n  {\n    employeeId: \"EMP-003\",\n    fullName: \"Carlos Rodriguez\",\n    email: \"carlos.rodriguez@company.com\",\n    phone: \"+34 91 123 45 67\",\n    passport: \"ES456789123\",\n    nationalId: \"45678912345\",\n    address: \"Calle Gran Vía 123, 28013 Madrid, Spain\",\n    dateOfBirth: \"1988-12-03\",\n    department: \"Sales\",\n    position: \"Sales Director\",\n    salary: 75000,\n    currency: \"EUR\",\n    country: \"Spain\",\n    workPermit: \"WP-ES-2024-003\",\n    emergencyContact: {\n      name: \"Maria Rodriguez\",\n      phone: \"+34 91 987 65 43\",\n      relationship: \"Wife\"\n    }\n  }\n];\n\n// Return each employee as a separate item for processing\nreturn employees.map(employee => ({\n  json: employee\n}));"
+      },
+      "id": "sample-employees",
+      "name": "Sample Employee Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🌍 International PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"fullName\": \"████ ███████\",     // Censored data\n  \"email\": \"████@████.███\",       // Censored data\n  \"passport\": \"█████████\"         // Censored data\n}\n```\n\n**Perfect for:** Cross-border HR, international compliance, global data processing\n\n**Want audit trails?** Try the Advanced version for compliance reporting!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "piiType": "international",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-international-pii",
+      "name": "Censor International PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  employeeId: inputData.employeeId,\n  fullName: inputData.fullName,\n  email: inputData.email,\n  phone: inputData.phone,\n  passport: inputData.passport,\n  nationalId: inputData.nationalId,\n  address: inputData.address,\n  dateOfBirth: inputData.dateOfBirth,\n  department: inputData.department,\n  position: inputData.position,\n  salary: inputData.salary,\n  currency: inputData.currency,\n  country: inputData.country,\n  workPermit: inputData.workPermit,\n  emergencyContact: inputData.emergencyContact\n};\n\nconst censored = inputData.censored;\n\n// Determine data sharing rules based on country\nconst getDataSharingRules = (country) => {\n  const rules = {\n    'Japan': { allowPersonalData: false, allowWorkData: true, allowEmergencyContact: false },\n    'United Kingdom': { allowPersonalData: true, allowWorkData: true, allowEmergencyContact: true },\n    'Spain': { allowPersonalData: true, allowWorkData: true, allowEmergencyContact: true }\n  };\n  return rules[country] || { allowPersonalData: false, allowWorkData: true, allowEmergencyContact: false };\n};\n\nconst rules = getDataSharingRules(original.country);\n\n// Create processed HR data based on regional rules\nconst processedData = {\n  employeeId: original.employeeId,\n  country: original.country,\n  dataSharingRules: rules,\n  workData: {\n    department: original.department,\n    position: original.position,\n    salary: original.salary,\n    currency: original.currency,\n    workPermit: rules.allowWorkData ? censored.workPermit : '█' + '█'.repeat(10)\n  },\n  personalData: rules.allowPersonalData ? {\n    name: censored.fullName,\n    email: censored.email,\n    phone: censored.phone,\n    address: censored.address,\n    dateOfBirth: censored.dateOfBirth\n  } : {\n    name: '████ ███████',\n    email: '████@█████.███',\n    phone: '████ ██ ████-████',\n    address: '████ ███ ███, ███████, ███████',\n    dateOfBirth: '████-██-██'\n  },\n  emergencyContact: rules.allowEmergencyContact ? {\n    name: censored.emergencyContact.name,\n    phone: censored.emergencyContact.phone,\n    relationship: censored.emergencyContact.relationship\n  } : {\n    name: '████ ███████',\n    phone: '████ ██ ████-████',\n    relationship: '██████████'\n  },\n  identifiers: {\n    passport: censored.passport,\n    nationalId: censored.nationalId\n  },\n  metadata: {\n    processedAt: new Date().toISOString(),\n    region: original.country,\n    piiProcessed: $input.first().json._metadata\n  }\n};\n\nreturn [{\n  json: processedData\n}];"
+      },
+      "id": "apply-regional-rules",
+      "name": "Apply Regional Data Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.dataSharingRules.allowPersonalData }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-data-sharing",
+      "name": "Check Data Sharing Rules",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ Full Data Sharing - Employee data processed for international sharing"
+            },
+            {
+              "name": "employeeId",
+              "value": "={{ $json.employeeId }}"
+            },
+            {
+              "name": "country",
+              "value": "={{ $json.country }}"
+            },
+            {
+              "name": "processedData",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "INTERNATIONAL COMPLIANT - Full data sharing allowed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "full-data-sharing",
+      "name": "Full Data Sharing Allowed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "🔒 Restricted Data Sharing - Only work data allowed for this region"
+            },
+            {
+              "name": "employeeId",
+              "value": "={{ $json.employeeId }}"
+            },
+            {
+              "name": "country",
+              "value": "={{ $json.country }}"
+            },
+            {
+              "name": "processedData",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "REGION RESTRICTED - Personal data censored per regional privacy laws"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "restricted-data-sharing",
+      "name": "Restricted Data Sharing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Employee Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Employee Data": {
+      "main": [
+        [
+          {
+            "node": "Censor International PII",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor International PII": {
+      "main": [
+        [
+          {
+            "node": "Apply Regional Data Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Regional Data Rules": {
+      "main": [
+        [
+          {
+            "node": "Check Data Sharing Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Data Sharing Rules": {
+      "main": [
+        [
+          {
+            "node": "Full Data Sharing Allowed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Restricted Data Sharing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

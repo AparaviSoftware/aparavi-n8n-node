@@ -1,0 +1,230 @@
+{
+  "name": "Medical Records - Advanced (Both Features)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample patient medical records\nconst patients = [\n  {\n    patientId: \"PAT-001\",\n    fullName: \"Robert Johnson\",\n    ssn: \"123-45-6789\",\n    dateOfBirth: \"1975-03-15\",\n    address: \"123 Oak Street, Boston, MA 02101\",\n    phone: \"(617) 555-0123\",\n    email: \"robert.johnson@email.com\",\n    insuranceNumber: \"BC123456789\",\n    medicalRecordNumber: \"MRN-789456123\",\n    diagnosis: \"Type 2 Diabetes Mellitus\",\n    medications: [\n      \"Metformin 500mg twice daily\",\n      \"Lisinopril 10mg once daily\"\n    ],\n    labResults: {\n      glucose: \"145 mg/dL\",\n      hba1c: \"7.2%\",\n      cholesterol: \"220 mg/dL\"\n    },\n    visitDate: \"2024-01-15\",\n    provider: \"Dr. Sarah Williams\",\n    department: \"Endocrinology\"\n  },\n  {\n    patientId: \"PAT-002\",\n    fullName: \"Maria Garcia\",\n    ssn: \"987-65-4321\",\n    dateOfBirth: \"1982-08-22\",\n    address: \"456 Pine Avenue, Los Angeles, CA 90210\",\n    phone: \"(323) 555-0456\",\n    email: \"maria.garcia@email.com\",\n    insuranceNumber: \"AET987654321\",\n    medicalRecordNumber: \"MRN-456789123\",\n    diagnosis: \"Hypertension\",\n    medications: [\n      \"Amlodipine 5mg once daily\",\n      \"Hydrochlorothiazide 25mg once daily\"\n    ],\n    labResults: {\n      systolicBP: \"140 mmHg\",\n      diastolicBP: \"90 mmHg\",\n      creatinine: \"1.1 mg/dL\"\n    },\n    visitDate: \"2024-01-16\",\n    provider: \"Dr. Michael Chen\",\n    department: \"Cardiology\"\n  }\n];\n\n// Return each patient as a separate item for processing\nreturn patients.map(patient => ({\n  json: patient\n}));"
+      },
+      "id": "sample-patients",
+      "name": "Sample Patient Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🏥 Advanced HIPAA Processing\n\n**This workflow uses BOTH advanced features:**\n- **`preserveStructure: true`** - Keep original + censored data\n- **`includeMetadata: true`** - Include detailed PII detection info\n\n### What this enables:\n- **Complete audit trail** - Original data + processing details\n- **Compliance reporting** - Full metadata for HIPAA audits\n- **Debugging & analysis** - Compare original vs censored with stats\n- **Flexible data usage** - Use either original or censored as needed\n- **PII analytics** - Track what types of PHI are most common\n\n### Data Structure:\n```json\n{\n  \"patientName\": \"Robert Johnson\",     // Original preserved\n  \"ssn\": \"123-45-6789\",              // Original preserved\n  \"censored\": {                        // Censored version\n    \"patientName\": \"████ ███████\",\n    \"ssn\": \"███-██-████\"\n  },\n  \"_metadata\": {                       // Processing details\n    \"piiType\": \"hipaa\",\n    \"detectedPII\": {...},\n    \"censoringStats\": {...}\n  }\n}\n```\n\n**Perfect for:** HIPAA compliance, medical research, audit trails, analytics",
+        "height": 900,
+        "width": 900
+      },
+      "id": "explanation-node",
+      "name": "Why Both Features?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -840]
+    },
+    {
+      "parameters": {
+        "piiType": "hipaa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {
+          "preserveStructure": true,
+          "includeMetadata": true
+        }
+      },
+      "id": "censor-hipaa-advanced",
+      "name": "Censor HIPAA (Advanced)",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  patientId: inputData.patientId,\n  fullName: inputData.fullName,\n  ssn: inputData.ssn,\n  dateOfBirth: inputData.dateOfBirth,\n  address: inputData.address,\n  phone: inputData.phone,\n  email: inputData.email,\n  insuranceNumber: inputData.insuranceNumber,\n  medicalRecordNumber: inputData.medicalRecordNumber,\n  diagnosis: inputData.diagnosis,\n  medications: inputData.medications,\n  labResults: inputData.labResults,\n  visitDate: inputData.visitDate,\n  provider: inputData.provider,\n  department: inputData.department\n};\n\nconst censored = inputData.censored;\nconst metadata = inputData._metadata;\n\n// Create comprehensive research dataset with full capabilities\nconst researchData = {\n  studyId: `STUDY-${original.patientId}`,\n  \n  // Demographics (anonymized)\n  demographics: {\n    age: new Date().getFullYear() - new Date(original.dateOfBirth).getFullYear(),\n    gender: 'Not Specified', // Additional privacy measure\n    region: 'United States'\n  },\n  \n  // Medical data (censored)\n  medicalData: {\n    diagnosis: censored.diagnosis,\n    medications: censored.medications,\n    labResults: censored.labResults,\n    visitDate: censored.visitDate,\n    department: censored.department\n  },\n  \n  // Provider data (censored)\n  providerData: {\n    provider: censored.provider,\n    department: censored.department\n  },\n  \n  // Anonymized identifiers\n  anonymizedIdentifiers: {\n    patientId: censored.patientId,\n    medicalRecordNumber: censored.medicalRecordNumber,\n    insuranceNumber: censored.insuranceNumber\n  },\n  \n  // Advanced metadata for compliance and analytics\n  advancedMetadata: {\n    anonymizationDate: metadata.processedAt,\n    studyPurpose: 'Medical Research',\n    dataRetention: '7 years',\n    irbApproval: 'IRB-2024-001',\n    hipaaCompliance: 'De-identified per 45 CFR 164.514',\n    \n    // PII processing details\n    piiProcessing: {\n      piiType: metadata.piiType,\n      totalFieldsProcessed: metadata.censoringStats?.totalFieldsProcessed || 0,\n      fieldsWithPII: metadata.censoringStats?.fieldsWithPII || 0,\n      piiPercentage: metadata.censoringStats ? \n        Math.round((metadata.censoringStats.fieldsWithPII / metadata.censoringStats.totalFieldsProcessed) * 100) : 0,\n      detectedPIITypes: Object.keys(metadata.detectedPII || {}),\n      censoringCharacter: metadata.censoringStats?.censoringCharacter || \"█\"\n    },\n    \n    // Detailed PII detection breakdown\n    detectedPII: metadata.detectedPII || {},\n    \n    // Audit capabilities\n    auditCapabilities: {\n      originalDataAvailable: true,\n      censoredDataAvailable: true,\n      processingMetadataAvailable: true,\n      canGenerateComplianceReport: true,\n      canCompareOriginalVsCensored: true,\n      canAnalyzePIIPatterns: true\n    }\n  },\n  \n  // Research-specific metadata\n  researchMetadata: {\n    dataSource: 'Hospital EHR System',\n    collectionDate: original.visitDate,\n    dataQuality: 'High',\n    privacyLevel: 'De-identified',\n    researchApproval: 'IRB-2024-001'\n  }\n};\n\nreturn [{\n  json: researchData\n}];"
+      },
+      "id": "create-advanced-research-dataset",
+      "name": "Create Advanced Research Dataset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.advancedMetadata.piiProcessing.piiPercentage }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-pii-level",
+      "name": "Check PII Level",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "🔬 High PII Research Dataset - Advanced processing complete"
+            },
+            {
+              "name": "studyId",
+              "value": "={{ $json.studyId }}"
+            },
+            {
+              "name": "piiAnalysis",
+              "value": "📊 PII Analysis:\n• Fields processed: {{ $json.advancedMetadata.piiProcessing.totalFieldsProcessed }}\n• Fields with PII: {{ $json.advancedMetadata.piiProcessing.fieldsWithPII }}\n• PII percentage: {{ $json.advancedMetadata.piiProcessing.piiPercentage }}%\n• PII types detected: {{ $json.advancedMetadata.piiProcessing.detectedPIITypes.join(', ') }}"
+            },
+            {
+              "name": "auditCapabilities",
+              "value": "🔍 Audit Capabilities:\n• Original data: {{ $json.advancedMetadata.auditCapabilities.originalDataAvailable }}\n• Censored data: {{ $json.advancedMetadata.auditCapabilities.censoredDataAvailable }}\n• Metadata: {{ $json.advancedMetadata.auditCapabilities.processingMetadataAvailable }}\n• Compliance reports: {{ $json.advancedMetadata.auditCapabilities.canGenerateComplianceReport }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "✅ HIPAA COMPLIANT - Full audit trail and metadata available"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "high-pii-research-ready",
+      "name": "High PII Research Ready",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "🔬 Standard Research Dataset - Advanced processing complete"
+            },
+            {
+              "name": "studyId",
+              "value": "={{ $json.studyId }}"
+            },
+            {
+              "name": "piiAnalysis",
+              "value": "📊 PII Analysis:\n• Fields processed: {{ $json.advancedMetadata.piiProcessing.totalFieldsProcessed }}\n• Fields with PII: {{ $json.advancedMetadata.piiProcessing.fieldsWithPII }}\n• PII percentage: {{ $json.advancedMetadata.piiProcessing.piiPercentage }}%\n• PII types detected: {{ $json.advancedMetadata.piiProcessing.detectedPIITypes.join(', ') }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "✅ HIPAA COMPLIANT - Full audit trail and metadata available"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "standard-research-ready",
+      "name": "Standard Research Ready",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Patient Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Patient Data": {
+      "main": [
+        [
+          {
+            "node": "Censor HIPAA (Advanced)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor HIPAA (Advanced)": {
+      "main": [
+        [
+          {
+            "node": "Create Advanced Research Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Advanced Research Dataset": {
+      "main": [
+        [
+          {
+            "node": "Check PII Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check PII Level": {
+      "main": [
+        [
+          {
+            "node": "High PII Research Ready",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Standard Research Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

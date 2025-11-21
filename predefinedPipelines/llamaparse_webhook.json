@@ -1,0 +1,58 @@
+{
+  "pipeline": {
+    "project_id": "864e0fdd-57ca-4089-9049-ae4e1a5633cd",
+    "source": "webhook_1",
+    "components": [
+      {
+        "id": "response_1",
+        "provider": "response",
+        "config": {
+          "lanes": []
+        },
+        "input": [
+          {
+            "lane": "table",
+            "from": "llamaparse_1"
+          },
+          {
+            "lane": "text",
+            "from": "llamaparse_1"
+          }
+        ]
+      },
+      {
+        "id": "llamaparse_1",
+        "provider": "llamaparse",
+        "config": {
+          "default": {
+            "use_advanced_config": false,
+            "parse_mode": "parse_page_with_lvm",
+            "spreadsheet_extract_sub_tables": false,
+            "use_system_prompt_append": false,
+            "lvm_model": "anthropic-sonnet-4.0"
+          }
+        },
+        "input": [
+          {
+            "lane": "tags",
+            "from": "webhook_1"
+          }
+        ]
+      },
+      {
+        "id": "webhook_1",
+        "provider": "webhook",
+        "config": {
+          "key": "webhook://*",
+          "mode": "Source",
+          "name": "Webhook Source",
+          "type": "webhook",
+          "parameters": {
+            "endpoint": "/pipe/process",
+            "port": 5566
+          }
+        }
+      }
+    ]
+  }
+}

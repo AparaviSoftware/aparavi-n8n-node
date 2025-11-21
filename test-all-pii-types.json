@@ -1,0 +1,127 @@
+{
+  "name": "Test All PII Types",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-all-pii",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "piiType": "usa",
+        "inputDataMode": "all"
+      },
+      "id": "test-usa-pii",
+      "name": "Test USA PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [460, 200]
+    },
+    {
+      "parameters": {
+        "piiType": "international",
+        "inputDataMode": "all"
+      },
+      "id": "test-international-pii",
+      "name": "Test International PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "piiType": "hipaa",
+        "inputDataMode": "all"
+      },
+      "id": "test-hipaa-pii",
+      "name": "Test HIPAA PII",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"All PII types tested successfully\",\n  \"results\": {\n    \"usa_pii\": {\n      \"original\": \"{{ $('Webhook Trigger').item.json.usa_text }}\",\n      \"censored\": \"{{ $('Test USA PII').item.json.textPlain }}\"\n    },\n    \"international_pii\": {\n      \"original\": \"{{ $('Webhook Trigger').item.json.international_text }}\",\n      \"censored\": \"{{ $('Test International PII').item.json.textPlain }}\"\n    },\n    \"hipaa_pii\": {\n      \"original\": \"{{ $('Webhook Trigger').item.json.hipaa_text }}\",\n      \"censored\": \"{{ $('Test HIPAA PII').item.json.textPlain }}\"\n    }\n  }\n}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Test USA PII",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Test International PII",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Test HIPAA PII",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test USA PII": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test International PII": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test HIPAA PII": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "test-all-pii-types",
+  "tags": []
+}

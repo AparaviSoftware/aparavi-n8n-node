@@ -1,0 +1,231 @@
+{
+  "name": "Healthcare Provider Communication Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample provider communication data\nconst communications = [\n  {\n    communicationId: \"COMM-001\",\n    type: \"referral\",\n    fromProvider: \"Dr. Sarah Williams\",\n    toProvider: \"Dr. Michael Chen\",\n    patientName: \"Robert Johnson\",\n    patientSSN: \"123-45-6789\",\n    patientDOB: \"1975-03-15\",\n    patientPhone: \"(617) 555-0123\",\n    patientEmail: \"robert.johnson@email.com\",\n    patientAddress: \"123 Oak Street, Boston, MA 02101\",\n    insuranceNumber: \"BC123456789\",\n    medicalRecordNumber: \"MRN-789456123\",\n    message: \"Patient Robert Johnson (DOB: 1975-03-15) presents with chest pain and elevated blood pressure. SSN: 123-45-6789. Please evaluate for cardiac issues. Contact at (617) 555-0123 or robert.johnson@email.com.\",\n    priority: \"urgent\",\n    timestamp: \"2024-01-15T14:30:00Z\",\n    attachments: [\n      \"ECG_Results_2024-01-15.pdf\",\n      \"Lab_Results_2024-01-15.pdf\"\n    ]\n  },\n  {\n    communicationId: \"COMM-002\",\n    type: \"consultation\",\n    fromProvider: \"Dr. Jennifer Lee\",\n    toProvider: \"Dr. David Kim\",\n    patientName: \"Maria Garcia\",\n    patientSSN: \"987-65-4321\",\n    patientDOB: \"1982-08-22\",\n    patientPhone: \"(323) 555-0456\",\n    patientEmail: \"maria.garcia@email.com\",\n    patientAddress: \"456 Pine Avenue, Los Angeles, CA 90210\",\n    insuranceNumber: \"AET987654321\",\n    medicalRecordNumber: \"MRN-456789123\",\n    message: \"Consultation request for Maria Garcia (DOB: 1982-08-22). Patient has persistent cough and shortness of breath. SSN: 987-65-4321. Please review imaging studies. Contact: (323) 555-0456.\",\n    priority: \"high\",\n    timestamp: \"2024-01-16T09:15:00Z\",\n    attachments: [\n      \"Chest_XRay_2024-01-16.pdf\",\n      \"Pulmonary_Function_Test.pdf\"\n    ]\n  },\n  {\n    communicationId: \"COMM-003\",\n    type: \"insurance_inquiry\",\n    fromProvider: \"Dr. Michael Chen\",\n    toProvider: \"Insurance Coordinator\",\n    patientName: \"David Smith\",\n    patientSSN: \"456-78-9012\",\n    patientDOB: \"1968-12-10\",\n    patientPhone: \"(312) 555-0789\",\n    patientEmail: \"david.smith@email.com\",\n    patientAddress: \"789 Elm Street, Chicago, IL 60601\",\n    insuranceNumber: \"UHC456789123\",\n    medicalRecordNumber: \"MRN-123789456\",\n    message: \"Insurance pre-authorization needed for David Smith (DOB: 1968-12-10). Procedure: Cardiac catheterization. SSN: 456-78-9012. Insurance: UHC456789123. Contact: (312) 555-0789.\",\n    priority: \"medium\",\n    timestamp: \"2024-01-17T11:45:00Z\",\n    attachments: [\n      \"Procedure_Authorization_Form.pdf\"\n    ]\n  }\n];\n\n// Return each communication as a separate item for processing\nreturn communications.map(comm => ({\n  json: comm\n}));"
+      },
+      "id": "sample-communications",
+      "name": "Sample Communications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🏥 HIPAA PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"patientName\": \"████ ███████\",   // Censored data\n  \"patientSSN\": \"███-██-████\",    // Censored data\n  \"patientEmail\": \"████@████.███\" // Censored data\n}\n```\n\n**Perfect for:** Healthcare communication, HIPAA compliance, provider data sharing\n\n**Want full audit trails?** Try the Advanced version with both features enabled!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "piiType": "hipaa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-hipaa-data",
+      "name": "Censor HIPAA Data",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  communicationId: inputData.communicationId,\n  type: inputData.type,\n  fromProvider: inputData.fromProvider,\n  toProvider: inputData.toProvider,\n  patientName: inputData.patientName,\n  patientSSN: inputData.patientSSN,\n  patientDOB: inputData.patientDOB,\n  patientPhone: inputData.patientPhone,\n  patientEmail: inputData.patientEmail,\n  patientAddress: inputData.patientAddress,\n  insuranceNumber: inputData.insuranceNumber,\n  medicalRecordNumber: inputData.medicalRecordNumber,\n  message: inputData.message,\n  priority: inputData.priority,\n  timestamp: inputData.timestamp,\n  attachments: inputData.attachments\n};\n\nconst censored = inputData.censored;\n\n// Determine sharing rules based on communication type\nconst getSharingRules = (type) => {\n  const rules = {\n    'referral': { allowPatientInfo: true, allowContactInfo: true, allowMedicalInfo: true },\n    'consultation': { allowPatientInfo: true, allowContactInfo: true, allowMedicalInfo: true },\n    'insurance_inquiry': { allowPatientInfo: false, allowContactInfo: false, allowMedicalInfo: true }\n  };\n  return rules[type] || { allowPatientInfo: false, allowContactInfo: false, allowMedicalInfo: true };\n};\n\nconst rules = getSharingRules(original.type);\n\n// Create processed communication data\nconst processedComm = {\n  communicationId: original.communicationId,\n  type: original.type,\n  priority: original.priority,\n  timestamp: original.timestamp,\n  sharingRules: rules,\n  providers: {\n    from: original.fromProvider,\n    to: original.toProvider\n  },\n  patientInfo: rules.allowPatientInfo ? {\n    name: censored.patientName,\n    dob: censored.patientDOB,\n    mrn: censored.medicalRecordNumber\n  } : {\n    name: '████ ███████',\n    dob: '████-██-██',\n    mrn: '███-████-███'\n  },\n  contactInfo: rules.allowContactInfo ? {\n    phone: censored.patientPhone,\n    email: censored.patientEmail,\n    address: censored.patientAddress\n  } : {\n    phone: '(███) ███-████',\n    email: '████@███.███',\n    address: '████ ███ ███, ███████, ██ █████'\n  },\n  medicalInfo: {\n    insurance: rules.allowPatientInfo ? censored.insuranceNumber : '██-████-███',\n    message: censored.message,\n    attachments: original.attachments\n  },\n  identifiers: {\n    ssn: censored.patientSSN,\n    mrn: censored.medicalRecordNumber\n  },\n  hipaaMetadata: {\n    processedAt: new Date().toISOString(),\n    communicationType: original.type,\n    sharingLevel: rules.allowPatientInfo ? 'Full' : 'Limited',\n    hipaaCompliance: 'De-identified per 45 CFR 164.514',\n    piiProcessed: $input.first().json._metadata\n  }\n};\n\nreturn [{\n  json: processedComm\n}];"
+      },
+      "id": "apply-sharing-rules",
+      "name": "Apply Sharing Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.sharingRules.allowPatientInfo }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-sharing-level",
+      "name": "Check Sharing Level",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ Full Communication Ready - Patient info included for provider collaboration"
+            },
+            {
+              "name": "communicationId",
+              "value": "={{ $json.communicationId }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $json.type }}"
+            },
+            {
+              "name": "processedComm",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "HIPAA COMPLIANT - Full provider communication with appropriate safeguards"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "full-communication",
+      "name": "Full Communication Ready",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "🔒 Limited Communication - Patient info censored for external sharing"
+            },
+            {
+              "name": "communicationId",
+              "value": "={{ $json.communicationId }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $json.type }}"
+            },
+            {
+              "name": "processedComm",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "HIPAA COMPLIANT - Limited sharing with external parties"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "limited-communication",
+      "name": "Limited Communication",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Communications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Communications": {
+      "main": [
+        [
+          {
+            "node": "Censor HIPAA Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor HIPAA Data": {
+      "main": [
+        [
+          {
+            "node": "Apply Sharing Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Sharing Rules": {
+      "main": [
+        [
+          {
+            "node": "Check Sharing Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Sharing Level": {
+      "main": [
+        [
+          {
+            "node": "Full Communication Ready",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Limited Communication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

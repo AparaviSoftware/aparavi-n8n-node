@@ -1,0 +1,61 @@
+{
+  "pipeline": {
+    "source": "source_1",
+    "components": [
+      {
+        "id": "source_1",
+        "provider": "webhook",
+        "config": {
+          "key": "webhook://*",
+          "mode": "Source",
+          "name": "Webhook Source",
+          "parameters": {
+            "endpoint": "/pipe/process",
+            "port": 5566
+          }
+        }
+      },
+      {
+        "id": "parse_1",
+        "provider": "parse",
+        "config": {
+          "advanced": true,
+          "extract_tables": true,
+          "extract_images": true,
+          "extract_metadata": true,
+          "preserve_formatting": true,
+          "extract_links": true
+        },
+        "input": [
+          {
+            "lane": "tags",
+            "from": "source_1"
+          }
+        ]
+      },
+      {
+        "id": "response_1",
+        "provider": "response",
+        "config": {
+          "keys": {
+            "documents": "procdocs"
+          }
+        },
+        "input": [
+          {
+            "lane": "text",
+            "from": "parse_1"
+          },
+          {
+            "lane": "table",
+            "from": "parse_1"
+          },
+          {
+            "lane": "image",
+            "from": "parse_1"
+          }
+        ]
+      }
+    ]
+  }
+}

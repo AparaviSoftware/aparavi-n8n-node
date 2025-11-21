@@ -1,0 +1,299 @@
+{
+  "name": "E-commerce Support Ticket PII Censoring",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample support ticket data\nconst tickets = [\n  {\n    ticketId: \"TICKET-001\",\n    customerName: \"Sarah Johnson\",\n    email: \"sarah.johnson@email.com\",\n    phone: \"(555) 123-4567\",\n    orderNumber: \"ORD-789456\",\n    issue: \"I need to update my credit card ending in 4532-1234-5678-9012 for my subscription\",\n    priority: \"high\",\n    department: \"billing\",\n    createdAt: \"2024-01-15T10:30:00Z\"\n  },\n  {\n    ticketId: \"TICKET-002\",\n    customerName: \"Mike Chen\",\n    email: \"mike.chen@email.com\",\n    phone: \"(555) 987-6543\",\n    orderNumber: \"ORD-123789\",\n    issue: \"My SSN 987-65-4321 was used for verification but I need to change it\",\n    priority: \"urgent\",\n    department: \"security\",\n    createdAt: \"2024-01-15T11:15:00Z\"\n  },\n  {\n    ticketId: \"TICKET-003\",\n    customerName: \"Emily Davis\",\n    email: \"emily.davis@email.com\",\n    phone: \"(555) 456-7890\",\n    orderNumber: \"ORD-456123\",\n    issue: \"Please update my address to 789 Pine St, Seattle, WA 98101\",\n    priority: \"medium\",\n    department: \"shipping\",\n    createdAt: \"2024-01-15T12:00:00Z\"\n  }\n];\n\n// Return each ticket as a separate item for processing\nreturn tickets.map(ticket => ({\n  json: ticket\n}));"
+      },
+      "id": "sample-tickets",
+      "name": "Sample Support Tickets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🔒 Basic PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"customerName\": \"████ ███████\",  // Censored data\n  \"email\": \"████@████.███\",        // Censored data\n  \"phone\": \"(███) ███-████\"        // Censored data\n}\n```\n\n**Perfect for:** Simple workflows, basic PII protection, straightforward data processing\n\n**Want analytics?** Try the \"With Metadata\" version for detailed PII detection stats!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "content": "## 🎬 Video Script - E-commerce Support Tickets\n\n### **Opening (0-30s)**\n• Welcome to n8n PII Censoring for support tickets\n• Show the e-commerce customer support use case\n• Explain why PII protection is critical for customer service\n\n### **Data Setup (30s-1m)**\n• Walk through the sample support ticket data\n• Show customer names, emails, phone numbers, SSNs\n• Highlight the sensitive information in support messages\n\n### **PII Processing (1m-2m)**\n• Demonstrate the Aparavi PII Censor node\n• Show USA PII type selection\n• Explain default settings (preserveStructure: false)\n• Run the workflow and show censored output\n\n### **Results Analysis (2m-2:30s)**\n• Compare original vs censored data\n• Show how customer info becomes █████ ███████\n• Explain the business value for support teams\n\n### **Advanced Options (2:30s-3m)**\n• Mention \"With Metadata\" version for analytics\n• Show when you'd want PII detection statistics\n• Wrap up with next steps",
+        "height": 800,
+        "width": 800
+      },
+      "id": "video-script",
+      "name": "Video Script",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, -600]
+    },
+    {
+      "parameters": {
+        "piiType": "usa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-pii",
+      "name": "Censor PII in Tickets",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "options": {
+          "height": 315,
+          "width": 560
+        }
+      },
+      "id": "video-node",
+      "name": "Demo Video",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the original data from the sample data node\nconst original = $('Sample Support Tickets').first().json;\n\n// Get the censored data from the PII Censor node\nconst censored = $input.first().json;\n\n// Check if any PII was found and censored\nconst hasPII = JSON.stringify(original) !== JSON.stringify(censored);\n\nreturn [{\n  json: {\n    ticketId: original.ticketId,\n    priority: original.priority,\n    department: original.department,\n    hasPII: hasPII,\n    originalIssue: original.issue,\n    censoredIssue: censored.issue,\n    originalCustomer: {\n      name: original.customerName,\n      email: original.email,\n      phone: original.phone\n    },\n    censoredCustomer: {\n      name: censored.customerName,\n      email: censored.email,\n      phone: censored.phone\n    },\n    createdAt: original.createdAt\n  }\n}];"
+      },
+      "id": "analyze-censoring",
+      "name": "Analyze Censoring Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.hasPII }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-pii-detected",
+      "name": "Check if PII Detected",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "🔒 PII DETECTED - Ticket sanitized for safe processing"
+            },
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "department",
+              "value": "={{ $json.department }}"
+            },
+            {
+              "name": "safeTicket",
+              "value": "={{ JSON.stringify($json.censoredCustomer, null, 2) }}"
+            },
+            {
+              "name": "safeIssue",
+              "value": "={{ $json.censoredIssue }}"
+            },
+            {
+              "name": "alertLevel",
+              "value": "HIGH - PII was present and has been censored"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pii-detected",
+      "name": "PII Detected Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ No PII detected - Ticket safe for processing"
+            },
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "department",
+              "value": "={{ $json.department }}"
+            },
+            {
+              "name": "originalTicket",
+              "value": "={{ JSON.stringify($json.originalCustomer, null, 2) }}"
+            },
+            {
+              "name": "originalIssue",
+              "value": "={{ $json.originalIssue }}"
+            },
+            {
+              "name": "alertLevel",
+              "value": "LOW - No PII detected"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "no-pii",
+      "name": "No PII Detected",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Support Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Support Tickets": {
+      "main": [
+        [
+          {
+            "node": "Censor PII in Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor PII in Tickets": {
+      "main": [
+        [
+          {
+            "node": "Analyze Censoring Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Censoring Results": {
+      "main": [
+        [
+          {
+            "node": "Check if PII Detected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if PII Detected": {
+      "main": [
+        [
+          {
+            "node": "PII Detected Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No PII Detected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1",
+  "groups": [
+    {
+      "id": "data-setup-group",
+      "name": "📊 Data Setup",
+      "color": "#FF6B6B",
+      "nodes": ["Manual Trigger", "Sample Support Tickets"],
+      "position": [200, 200],
+      "dimensions": [300, 200]
+    },
+    {
+      "id": "pii-processing-group",
+      "name": "🔒 PII Processing",
+      "color": "#4ECDC4",
+      "nodes": ["Censor PII in Tickets", "Default PII Processing"],
+      "position": [800, 200],
+      "dimensions": [300, 200]
+    },
+    {
+      "id": "analysis-group",
+      "name": "📈 Analysis & Results",
+      "color": "#45B7D1",
+      "nodes": ["Analyze Censoring Results", "Check if PII Detected", "PII Detected Alert", "No PII Alert"],
+      "position": [1100, 200],
+      "dimensions": [400, 300]
+    },
+    {
+      "id": "video-group",
+      "name": "🎬 Video Resources",
+      "color": "#96CEB4",
+      "nodes": ["Video Script", "Demo Video"],
+      "position": [1200, 50],
+      "dimensions": [600, 600]
+    }
+  ]
+}

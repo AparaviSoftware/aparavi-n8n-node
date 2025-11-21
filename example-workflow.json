@@ -1,0 +1,101 @@
+{
+  "name": "Aparavi PII Censor Example",
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "John Smith"
+            },
+            {
+              "name": "ssn",
+              "value": "123-45-6789"
+            },
+            {
+              "name": "phone",
+              "value": "(555) 123-4567"
+            },
+            {
+              "name": "email",
+              "value": "john.smith@example.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-data",
+      "name": "Set Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "censor",
+        "piiType": "usa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {
+          "preserveStructure": true,
+          "includeMetadata": true
+        }
+      },
+      "id": "aparavi-pii",
+      "name": "Aparavi PII Censor",
+      "type": "n8n-nodes-aparavi-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "aparaviApi": {
+          "id": "aparavi-credentials",
+          "name": "Aparavi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "output",
+      "name": "Output",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Set Data": {
+      "main": [
+        [
+          {
+            "node": "Aparavi PII Censor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aparavi PII Censor": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

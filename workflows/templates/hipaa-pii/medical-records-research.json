@@ -1,0 +1,219 @@
+{
+  "name": "Medical Records Anonymization for Research",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sample patient medical records\nconst patients = [\n  {\n    patientId: \"PAT-001\",\n    fullName: \"Robert Johnson\",\n    ssn: \"123-45-6789\",\n    dateOfBirth: \"1975-03-15\",\n    address: \"123 Oak Street, Boston, MA 02101\",\n    phone: \"(617) 555-0123\",\n    email: \"robert.johnson@email.com\",\n    insuranceNumber: \"BC123456789\",\n    medicalRecordNumber: \"MRN-789456123\",\n    diagnosis: \"Type 2 Diabetes Mellitus\",\n    medications: [\n      \"Metformin 500mg twice daily\",\n      \"Lisinopril 10mg once daily\"\n    ],\n    labResults: {\n      glucose: \"145 mg/dL\",\n      hba1c: \"7.2%\",\n      cholesterol: \"220 mg/dL\"\n    },\n    visitDate: \"2024-01-15\",\n    provider: \"Dr. Sarah Williams\",\n    department: \"Endocrinology\"\n  },\n  {\n    patientId: \"PAT-002\",\n    fullName: \"Maria Garcia\",\n    ssn: \"987-65-4321\",\n    dateOfBirth: \"1982-08-22\",\n    address: \"456 Pine Avenue, Los Angeles, CA 90210\",\n    phone: \"(323) 555-0456\",\n    email: \"maria.garcia@email.com\",\n    insuranceNumber: \"AET987654321\",\n    medicalRecordNumber: \"MRN-456789123\",\n    diagnosis: \"Hypertension\",\n    medications: [\n      \"Amlodipine 5mg once daily\",\n      \"Hydrochlorothiazide 25mg once daily\"\n    ],\n    labResults: {\n      systolicBP: \"140 mmHg\",\n      diastolicBP: \"90 mmHg\",\n      creatinine: \"1.1 mg/dL\"\n    },\n    visitDate: \"2024-01-16\",\n    provider: \"Dr. Michael Chen\",\n    department: \"Cardiology\"\n  },\n  {\n    patientId: \"PAT-003\",\n    fullName: \"David Smith\",\n    ssn: \"456-78-9012\",\n    dateOfBirth: \"1968-12-10\",\n    address: \"789 Elm Street, Chicago, IL 60601\",\n    phone: \"(312) 555-0789\",\n    email: \"david.smith@email.com\",\n    insuranceNumber: \"UHC456789123\",\n    medicalRecordNumber: \"MRN-123789456\",\n    diagnosis: \"Chronic Obstructive Pulmonary Disease (COPD)\",\n    medications: [\n      \"Albuterol inhaler as needed\",\n      \"Tiotropium 18mcg once daily\"\n    ],\n    labResults: {\n      fev1: \"65% predicted\",\n      fvc: \"70% predicted\",\n      oxygenSaturation: \"94%\"\n    },\n    visitDate: \"2024-01-17\",\n    provider: \"Dr. Jennifer Lee\",\n    department: \"Pulmonology\"\n  }\n];\n\n// Return each patient as a separate item for processing\nreturn patients.map(patient => ({\n  json: patient\n}));"
+      },
+      "id": "sample-patients",
+      "name": "Sample Patient Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "content": "## 🏥 HIPAA PII Processing\n\n**This workflow uses default settings:**\n- **`preserveStructure: false`** (default)\n- **`includeMetadata: false`** (default)\n\n### What this means:\n- **Simple output** - Original data is overwritten with censored data\n- **Clean results** - No extra properties, just censored data\n- **Easy to use** - Straightforward data structure\n\n### Data Structure:\n```json\n{\n  \"fullName\": \"████ ███████\",     // Censored data\n  \"ssn\": \"███-██-████\",          // Censored data\n  \"email\": \"████@████.███\"       // Censored data\n}\n```\n\n**Perfect for:** Medical research, HIPAA compliance, healthcare data anonymization\n\n**Want full audit trails?** Try the Advanced version with both features enabled!",
+        "height": 544,
+        "width": 672
+      },
+      "id": "explanation-node",
+      "name": "Default PII Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [680, -480]
+    },
+    {
+      "parameters": {
+        "piiType": "hipaa",
+        "inputData": "auto",
+        "censorChar": "█",
+        "options": {}
+      },
+      "id": "censor-hipaa-data",
+      "name": "Censor HIPAA Data",
+      "type": "n8n-nodes-aparavi-dtc-pii.aparaviPII",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "aparaviApi": "aparavi-api-credential"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from the PII Censor node\nconst inputData = $input.first().json;\n\n// Extract original and censored data\nconst original = {\n  patientId: inputData.patientId,\n  fullName: inputData.fullName,\n  ssn: inputData.ssn,\n  dateOfBirth: inputData.dateOfBirth,\n  address: inputData.address,\n  phone: inputData.phone,\n  email: inputData.email,\n  insuranceNumber: inputData.insuranceNumber,\n  medicalRecordNumber: inputData.medicalRecordNumber,\n  diagnosis: inputData.diagnosis,\n  medications: inputData.medications,\n  labResults: inputData.labResults,\n  visitDate: inputData.visitDate,\n  provider: inputData.provider,\n  department: inputData.department\n};\n\nconst censored = inputData.censored;\n\n// Create research dataset with proper anonymization\nconst researchData = {\n  studyId: `STUDY-${original.patientId}`,\n  demographics: {\n    age: new Date().getFullYear() - new Date(original.dateOfBirth).getFullYear(),\n    gender: 'Not Specified', // Remove gender for additional privacy\n    region: 'United States'\n  },\n  medicalData: {\n    diagnosis: censored.diagnosis,\n    medications: censored.medications,\n    labResults: censored.labResults,\n    visitDate: censored.visitDate,\n    department: censored.department\n  },\n  providerData: {\n    provider: censored.provider,\n    department: censored.department\n  },\n  anonymizedIdentifiers: {\n    patientId: censored.patientId,\n    medicalRecordNumber: censored.medicalRecordNumber,\n    insuranceNumber: censored.insuranceNumber\n  },\n  researchMetadata: {\n    anonymizationDate: new Date().toISOString(),\n    studyPurpose: 'Medical Research',\n    dataRetention: '7 years',\n    irbApproval: 'IRB-2024-001',\n    hipaaCompliance: 'De-identified per 45 CFR 164.514',\n    piiProcessed: $input.first().json._metadata\n  }\n};\n\nreturn [{\n  json: researchData\n}];"
+      },
+      "id": "create-research-dataset",
+      "name": "Create Research Dataset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.researchMetadata.irbApproval }}",
+              "rightValue": "IRB-2024-001",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-irb-approval",
+      "name": "Check IRB Approval",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "✅ Research Dataset Ready - HIPAA compliant anonymized data"
+            },
+            {
+              "name": "studyId",
+              "value": "={{ $json.studyId }}"
+            },
+            {
+              "name": "researchData",
+              "value": "={{ JSON.stringify($json, null, 2) }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "HIPAA COMPLIANT - De-identified per 45 CFR 164.514"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "research-ready",
+      "name": "Research Dataset Ready",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "⚠️ IRB Approval Required - Cannot proceed without proper approval"
+            },
+            {
+              "name": "studyId",
+              "value": "={{ $json.studyId }}"
+            },
+            {
+              "name": "complianceStatus",
+              "value": "IRB APPROVAL REQUIRED - Cannot anonymize without proper authorization"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "irb-approval-required",
+      "name": "IRB Approval Required",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Patient Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Patient Data": {
+      "main": [
+        [
+          {
+            "node": "Censor HIPAA Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Censor HIPAA Data": {
+      "main": [
+        [
+          {
+            "node": "Create Research Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Research Dataset": {
+      "main": [
+        [
+          {
+            "node": "Check IRB Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check IRB Approval": {
+      "main": [
+        [
+          {
+            "node": "Research Dataset Ready",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IRB Approval Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

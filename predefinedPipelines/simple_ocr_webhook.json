@@ -1,0 +1,68 @@
+{
+  "pipeline": {
+    "source": "source_1",
+    "components": [
+      {
+        "id": "source_1",
+        "provider": "webhook",
+        "config": {
+          "key": "webhook://*",
+          "mode": "Source",
+          "name": "Webhook Source",
+          "parameters": {
+            "endpoint": "/pipe/process",
+            "port": 5566
+          }
+        }
+      },
+      {
+        "id": "ocr_1",
+        "provider": "ocr",
+        "config": {
+          "default": {
+            "doctr": {
+              "det_arch": "db_resnet50",
+              "reco_arch": "crnn_vgg16_bn"
+            },
+            "language": "en",
+            "table": "Doctr"
+          },
+          "multilingual": {
+            "doctr": {
+              "det_arch": "db_resnet50",
+              "reco_arch": "crnn_vgg16_bn"
+            },
+            "table": "Doctr"
+          },
+          "profile": "default"
+        },
+        "input": [
+          {
+            "lane": "image",
+            "from": "source_1"
+          }
+        ]
+      },
+      {
+        "id": "response_1",
+        "provider": "response",
+        "config": {
+          "keys": {
+            "documents": "procdocs"
+          }
+        },
+        "input": [
+          {
+            "lane": "text",
+            "from": "ocr_1"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
+
+
+
