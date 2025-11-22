@@ -6,8 +6,8 @@ A comprehensive n8n community node package that provides powerful data processin
 
 ## 📦 Package Information
 
-- **npm Package**: [n8n-nodes-aparavi-dtc](https://www.npmjs.com/package/n8n-nodes-aparavi-dtc)
-- **Version**: 1.1.42
+- **npm Package**: [aparavi-n8n-node](https://www.npmjs.com/package/aparavi-n8n-node)
+- **Version**: 1.0.0
 - **GitHub Repository**: [AparaviSoftware/aparavi-n8n-node](https://github.com/AparaviSoftware/aparavi-n8n-node)
 
 ## 🎯 Available Nodes
@@ -49,18 +49,18 @@ Specialized PII and HIPAA data anonymization:
 1. **Open n8n** in your browser (usually `http://localhost:5678`)
 2. **Go to Settings** → **Community Nodes**
 3. **Click "Install a community node"**
-4. **Enter package name**: `n8n-nodes-aparavi-dtc`
+4. **Enter package name**: `aparavi-n8n-node`
 5. **Click "Install"**
 6. **Restart n8n** (if prompted)
 
 #### Option B: Manual Installation
 ```bash
 # Install globally
-npm install -g n8n-nodes-aparavi-dtc
+npm install -g aparavi-n8n-node
 
 # Or install locally in your n8n directory
 cd ~/.n8n
-npm install n8n-nodes-aparavi-dtc
+npm install aparavi-n8n-node
 
 # Restart n8n
 n8n start
@@ -69,13 +69,13 @@ n8n start
 #### Option C: Copy to Custom Nodes Directory
 ```bash
 # 1. Install the package
-npm install n8n-nodes-aparavi-dtc
+npm install aparavi-n8n-node
 
 # 2. Copy to n8n custom nodes directory
-cp -r node_modules/n8n-nodes-aparavi-dtc/dist ~/.n8n/custom/nodes/n8n-nodes-aparavi-dtc
+cp -r node_modules/aparavi-n8n-node/dist ~/.n8n/custom/nodes/aparavi-n8n-node
 
 # 3. Install dependencies
-cd ~/.n8n/custom/nodes/n8n-nodes-aparavi-dtc
+cd ~/.n8n/custom/nodes/aparavi-n8n-node
 npm install --production
 
 # 4. Restart n8n
@@ -391,7 +391,7 @@ node test-pipeline-debug.js
 #### Nodes Don't Appear in n8n
 ```bash
 # Check if package is installed
-npm list -g n8n-nodes-aparavi-dtc
+npm list -g aparavi-n8n-node
 
 # Check n8n logs for errors
 n8n start --log-level debug
@@ -407,7 +407,7 @@ n8n start
 npm cache clean --force
 
 # Reinstall latest version
-npm install -g n8n-nodes-aparavi-dtc@latest
+npm install -g aparavi-n8n-node@latest
 
 # Check n8n version compatibility
 n8n --version
