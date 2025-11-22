@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-aparavi-dtc",
-  "version": "1.1.43",
+  "version": "1.1.42",
   "description": "n8n community nodes for Aparavi DTC API. Run any workflow including PII/HIPAA anonymization, OCR, document parsing, audio transcription, and custom pipelines.",
   "keywords": [
     "n8n-community-node-package",
@@ -40,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AparaviSoftware/aparavi-n8n-node.git"
+    "url": "git+https://github.com/AparaviSoftware/aparavi-n8n-node.git"
   },
   "main": "dist/index.js",
   "scripts": {
