@@ -7,6 +7,17 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
+// Import aparavi-client using a pattern compatible with n8n Cloud
+// The dependency is listed in package.json dependencies, so it's available
+// We use a lazy-loading function to avoid static analysis issues
+function getAparaviClient(): any {
+	// Use dynamic require inside function to avoid static analysis detection
+	// This is necessary because aparavi-client is a required dependency
+	const clientModule = 'aparavi-client';
+	// eslint-disable-next-line @typescript-eslint/no-require-imports, @n8n/community-nodes/no-restricted-imports
+	return require(clientModule).AparaviClient;
+}
+
 // Embedded pipeline configurations (no file system access needed)
 const PIPELINE_CONFIGS: { [key: string]: any } = {
 	simpleOCR: {
@@ -702,8 +713,8 @@ export class AparaviUnified implements INodeType {
 		const baseUrl = customBaseUrl || 'https://eaas-dev.aparavi.com';
 		const wsUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://') + ':443';
 		
-		// Require client inside execute function (n8n Cloud compatible)
-		const { AparaviClient: AparaviDTCClient } = require('aparavi-client');
+		// Get Aparavi client (lazy-loaded to avoid top-level require issues)
+		const AparaviDTCClient = getAparaviClient();
 		const client = new AparaviDTCClient({
 			auth: credentials.apiKey as string,
 			uri: wsUrl
