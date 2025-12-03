@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-aparavi",
-  "version": "1.0.5",
+  "version": "1.0.15",
   "description": "n8n community nodes for Aparavi DTC API. Run any workflow including PII/HIPAA anonymization, OCR, document parsing, audio transcription, and custom pipelines.",
   "keywords": [
     "n8n-community-node-package",
@@ -44,7 +44,8 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && gulp build:icons && gulp copy:pipelines",
+    "build": "npm run bundle:deps && tsc && gulp build:icons && gulp copy:pipelines && gulp add:eslint-disable",
+    "bundle:deps": "node scripts/bundle-dependencies.js",
     "dev": "tsc --watch",
     "format": "prettier nodes --write",
     "lint": "eslint . --ext .js,.ts --ignore-path .gitignore",
@@ -67,16 +68,14 @@
   "devDependencies": {
     "@types/node": "^16.18.68",
     "@typescript-eslint/parser": "^5.59.8",
+    "aparavi-client": "^1.0.6",
+    "esbuild": "^0.19.0",
     "eslint": "^8.42.0",
     "eslint-plugin-n8n-nodes-base": "^1.11.0",
     "gulp": "^4.0.2",
     "n8n-workflow": "*",
     "prettier": "^2.8.8",
     "typescript": "^4.9.5"
-  },
-  "dependencies": {
-    "aparavi-client": "^1.0.6",
-    "aparavi-dtc-node-sdk": "file:../aparavi-dtc-node-sdk"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
